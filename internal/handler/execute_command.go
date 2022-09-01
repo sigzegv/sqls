@@ -28,6 +28,7 @@ const (
 	CommandShowConnections  = "showConnections"
 	CommandSwitchDatabase   = "switchDatabase"
 	CommandSwitchConnection = "switchConnections"
+	CommandShowTables       = "showTables"
 )
 
 func (h *Server) handleTextDocumentCodeAction(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) (result interface{}, err error) {
@@ -71,6 +72,11 @@ func (h *Server) handleTextDocumentCodeAction(ctx context.Context, conn *jsonrpc
 			Command:   CommandSwitchConnection,
 			Arguments: []interface{}{},
 		},
+		{
+			Title:     "Show Tables",
+			Command:   CommandShowTables,
+			Arguments: []interface{}{},
+		},
 	}
 	return commands, nil
 }
@@ -98,6 +104,8 @@ func (s *Server) handleWorkspaceExecuteCommand(ctx context.Context, conn *jsonrp
 		return s.switchDatabase(ctx, params)
 	case CommandSwitchConnection:
 		return s.switchConnections(ctx, params)
+	case CommandShowTables:
+		return s.showTables(ctx, params)
 	}
 	return nil, fmt.Errorf("unsupported command: %v", params.Command)
 }
@@ -285,6 +293,29 @@ func (s *Server) showSchemas(ctx context.Context, params lsp.ExecuteCommandParam
 		return nil, err
 	}
 	return strings.Join(schemas, "\n"), nil
+}
+
+func (s *Server) showTables(ctx context.Context, params lsp.ExecuteCommandParams) (result interface{}, err error) {
+	repo, err := s.newDBRepository(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	tables, _ := repo.SchemaTables(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	schema, err := repo.CurrentSchema(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	if _, ok := tables[schema]; !ok {
+		return "", fmt.Errorf("no tables found for schema '%s'", schema)
+	}
+
+	return strings.Join(tables[schema], "\n"), nil
 }
 
 func (s *Server) switchDatabase(ctx context.Context, params lsp.ExecuteCommandParams) (result interface{}, err error) {
