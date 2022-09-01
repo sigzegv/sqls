@@ -10,6 +10,7 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/lighttiger2505/sqls/ast"
 	"github.com/lighttiger2505/sqls/internal/database"
@@ -201,7 +202,11 @@ func (s *Server) query(ctx context.Context, query string, vertical bool) (string
 	if err != nil {
 		return "", err
 	}
+
+	start := time.Now()
 	rows, err := repo.Query(context.Background(), query)
+	elapsed := time.Since(start)
+
 	if err != nil {
 		return err.Error(), nil
 	}
@@ -230,7 +235,8 @@ func (s *Server) query(ctx context.Context, query string, vertical bool) (string
 		}
 		table.Render()
 	}
-	fmt.Fprintf(buf, "%d rows in set", len(stringRows))
+
+	fmt.Fprintf(buf, "%d rows in %s", len(stringRows), elapsed)
 	fmt.Fprintln(buf, "")
 	fmt.Fprintln(buf, "")
 	return buf.String(), nil
