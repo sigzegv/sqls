@@ -23,7 +23,7 @@ func (u *DBCacheGenerator) GenerateDBCachePrimary(ctx context.Context) (*DBCache
 	if err != nil {
 		return nil, err
 	}
-	dbCache.Schemas, err = u.genSchmeaCache(ctx)
+	dbCache.Schemas, err = u.genSchemaCache(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (u *DBCacheGenerator) GenerateDBCacheSecondary(ctx context.Context) (map[st
 	return u.genColumnCacheAll(ctx)
 }
 
-func (u *DBCacheGenerator) genSchmeaCache(ctx context.Context) (map[string]string, error) {
+func (u *DBCacheGenerator) genSchemaCache(ctx context.Context) (map[string]string, error) {
 	dbs, err := u.repo.Schemas(ctx)
 	if err != nil {
 		return nil, err
