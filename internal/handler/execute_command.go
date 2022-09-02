@@ -238,6 +238,7 @@ func (s *Server) query(ctx context.Context, query string, vertical bool) (string
 	} else {
 		table := tablewriter.NewWriter(buf)
 		table.SetHeader(columns)
+		table.SetAutoFormatHeaders(false)
 		for _, stringRow := range stringRows {
 			table.Append(stringRow)
 		}
