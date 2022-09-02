@@ -287,7 +287,50 @@ WHERE information_schema.COLUMNS.TABLE_SCHEMA = ?
 		}
 		tableInfos = append(tableInfos, &tableInfo)
 	}
+
 	return tableInfos, nil
+}
+
+func (db *MySQLDBRepository) DescribeDatabaseIndexBySchema(ctx context.Context, schemaName string) ([]*IndexDesc, error) {
+	rows, err := db.Conn.QueryContext(
+		ctx,
+		`
+SELECT
+	TABLE_SCHEMA,
+	TABLE_NAME,
+	INDEX_NAME,
+	GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX),
+	NON_UNIQUE
+FROM
+	INFORMATION_SCHEMA.STATISTICS
+WHERE
+	TABLE_SCHEMA = ?
+GROUP BY TABLE_SCHEMA, TABLE_NAME, INDEX_NAME
+ORDER BY TABLE_SCHEMA, TABLE_NAME, INDEX_NAME, SEQ_IN_INDEX, COLUMN_NAME
+`, schemaName)
+	if err != nil {
+		return nil, err
+	}
+
+	infos := []*IndexDesc{}
+
+	for rows.Next() {
+		info := IndexDesc{}
+		err := rows.Scan(
+			&info.Schema,
+			&info.Table,
+			&info.Index,
+			&info.Columns,
+			&info.Uniq,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		infos = append(infos, &info)
+	}
+
+	return infos, nil
 }
 
 func (db *MySQLDBRepository) Exec(ctx context.Context, query string) (sql.Result, error) {

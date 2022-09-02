@@ -30,6 +30,7 @@ type DBRepository interface {
 	SchemaTables(ctx context.Context) (map[string][]string, error)
 	DescribeDatabaseTable(ctx context.Context) ([]*ColumnDesc, error)
 	DescribeDatabaseTableBySchema(ctx context.Context, schemaName string) ([]*ColumnDesc, error)
+	DescribeDatabaseIndexBySchema(ctx context.Context, schemaName string) ([]*IndexDesc, error)
 	Exec(ctx context.Context, query string) (sql.Result, error)
 	Query(ctx context.Context, query string) (*sql.Rows, error)
 }
@@ -151,5 +152,44 @@ func SubqueryColumnDoc(identName string, views []*parseutil.SubQueryView, dbCach
 			}
 		}
 	}
+	return buf.String()
+}
+
+type IndexDesc struct {
+	Schema  string
+	Table   string
+	Index   string
+	Uniq    bool
+	Columns string
+}
+
+func (i *IndexDesc) OnelineDesc() string {
+	buf := new(bytes.Buffer)
+
+	fmt.Fprintf(buf, "- %s (%s)", i.Index, i.Columns)
+
+	if i.Uniq {
+		fmt.Fprintf(buf, " UNIQ")
+	}
+
+	return buf.String()
+}
+
+func IndexDoc(tableName string, indexDescs []*IndexDesc) string {
+	buf := new(bytes.Buffer)
+
+	if len(indexDescs) == 0 {
+		return ""
+	}
+
+	fmt.Fprintf(buf, "Indexes")
+	fmt.Fprintln(buf)
+	fmt.Fprintln(buf)
+
+	for _, idx := range indexDescs {
+		fmt.Fprintf(buf, idx.OnelineDesc())
+		fmt.Fprintln(buf)
+	}
+
 	return buf.String()
 }

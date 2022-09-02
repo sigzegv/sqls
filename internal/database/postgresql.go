@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"fmt"
 	"log"
 	"net"
 	"net/url"
@@ -345,6 +346,10 @@ func (db *PostgreSQLDBRepository) DescribeDatabaseTableBySchema(ctx context.Cont
 		tableInfos = append(tableInfos, &tableInfo)
 	}
 	return tableInfos, nil
+}
+
+func (db *PostgreSQLDBRepository) DescribeDatabaseIndexBySchema(ctx context.Context, schemaName string) ([]*IndexDesc, error) {
+	return nil, fmt.Errorf("PostgreSQLDBRepository.DescribeDatabaseIndexBySchema not implemented")
 }
 
 func (db *PostgreSQLDBRepository) Exec(ctx context.Context, query string) (sql.Result, error) {

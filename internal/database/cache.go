@@ -35,6 +35,10 @@ func (u *DBCacheGenerator) GenerateDBCachePrimary(ctx context.Context) (*DBCache
 	if err != nil {
 		return nil, err
 	}
+	dbCache.IndexWithParent, err = u.genIndexCacheCurrent(ctx, dbCache.defaultSchema)
+	if err != nil {
+		return nil, err
+	}
 	return dbCache, nil
 }
 
@@ -82,6 +86,29 @@ func genColumnMap(columnDescs []*ColumnDesc) map[string][]*ColumnDesc {
 		}
 	}
 	return columnMap
+
+}
+
+func (u *DBCacheGenerator) genIndexCacheCurrent(ctx context.Context, schemaName string) (map[string][]*IndexDesc, error) {
+	indexDescs, err := u.repo.DescribeDatabaseIndexBySchema(ctx, schemaName)
+	if err != nil {
+		return nil, err
+	}
+	return genIndexMap(indexDescs), nil
+}
+
+func genIndexMap(indexDescs []*IndexDesc) map[string][]*IndexDesc {
+	indexMap := map[string][]*IndexDesc{}
+	for _, desc := range indexDescs {
+		key := desc.Schema + "\t" + desc.Table
+		if _, ok := indexMap[key]; ok {
+			indexMap[key] = append(indexMap[key], desc)
+		} else {
+			arr := []*IndexDesc{desc}
+			indexMap[key] = arr
+		}
+	}
+	return indexMap
 }
 
 type DBCache struct {
@@ -89,6 +116,7 @@ type DBCache struct {
 	Schemas           map[string]string
 	SchemaTables      map[string][]string
 	ColumnsWithParent map[string][]*ColumnDesc
+	IndexWithParent   map[string][]*IndexDesc
 }
 
 func (dc *DBCache) Database(dbName string) (db string, ok bool) {
@@ -140,5 +168,14 @@ func (dc *DBCache) Column(tableName, colName string) (*ColumnDesc, bool) {
 }
 
 func columnDatabaseKey(dbName, tableName string) string {
+	return dbName + "\t" + tableName
+}
+
+func (dc *DBCache) IndexDescs(tableName string) (idx []*IndexDesc, ok bool) {
+	idx, ok = dc.IndexWithParent[indexDatabaseKey(dc.defaultSchema, tableName)]
+	return
+}
+
+func indexDatabaseKey(dbName, tableName string) string {
 	return dbName + "\t" + tableName
 }

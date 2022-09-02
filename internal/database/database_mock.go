@@ -15,6 +15,7 @@ type MockDBRepository struct {
 	MockDescribeTable                 func(context.Context, string) ([]*ColumnDesc, error)
 	MockDescribeDatabaseTable         func(context.Context) ([]*ColumnDesc, error)
 	MockDescribeDatabaseTableBySchema func(context.Context, string) ([]*ColumnDesc, error)
+	MockDescribeDatabaseIndexBySchema func(context.Context, string) ([]*IndexDesc, error)
 	MockExec                          func(context.Context, string) (sql.Result, error)
 	MockQuery                         func(context.Context, string) (*sql.Rows, error)
 }
@@ -50,6 +51,10 @@ func NewMockDBRepository(conn *sql.DB) DBRepository {
 			res = append(res, dummyCountryColumns...)
 			res = append(res, dummyCountryLanguageColumns...)
 			return res, nil
+
+		},
+		MockDescribeDatabaseIndexBySchema: func(ctx context.Context, schemaName string) ([]*IndexDesc, error) {
+			return nil, nil
 
 		},
 		MockExec: func(ctx context.Context, query string) (sql.Result, error) {
@@ -98,6 +103,10 @@ func (m *MockDBRepository) DescribeDatabaseTable(ctx context.Context) ([]*Column
 
 func (m *MockDBRepository) DescribeDatabaseTableBySchema(ctx context.Context, schemaName string) ([]*ColumnDesc, error) {
 	return m.MockDescribeDatabaseTableBySchema(ctx, schemaName)
+}
+
+func (m *MockDBRepository) DescribeDatabaseIndexBySchema(ctx context.Context, schemaName string) ([]*IndexDesc, error) {
+	return m.MockDescribeDatabaseIndexBySchema(ctx, schemaName)
 }
 
 func (m *MockDBRepository) Exec(ctx context.Context, query string) (sql.Result, error) {

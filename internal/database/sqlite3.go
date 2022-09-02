@@ -140,6 +140,10 @@ func (db *SQLite3DBRepository) DescribeDatabaseTableBySchema(ctx context.Context
 	return db.DescribeDatabaseTable(ctx)
 }
 
+func (db *SQLite3DBRepository) DescribeDatabaseIndexBySchema(ctx context.Context, schemaName string) ([]*IndexDesc, error) {
+	return nil, fmt.Errorf("SQLite3DBRepository.DescribeDatabaseIndexBySchema not implemented")
+}
+
 func (db *SQLite3DBRepository) Exec(ctx context.Context, query string) (sql.Result, error) {
 	return db.Conn.ExecContext(ctx, query)
 }
